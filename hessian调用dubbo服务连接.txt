@@ -119,3 +119,6 @@
     hessian是基于binary-rpc协议
     dubbo是 基于Hessian二进制序列化
     webservice也提供了rpc实现，但是效果不太好。
+
+6、使用telnet连接
+    telnet 192.168.145.1 20881（发布到zookeeper上以后的服务地址）
