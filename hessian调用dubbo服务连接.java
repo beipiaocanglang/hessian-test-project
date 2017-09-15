@@ -1,0 +1,121 @@
+
+1、导入依赖
+    <dependency>
+        <groupId>com.caucho</groupId>
+        <artifactId>hessian</artifactId>
+        <version>4.0.33</version>
+    </dependency>
+    <dependency>
+        <groupId>org.mortbay.jetty</groupId>
+        <artifactId>jetty</artifactId>
+        <version>6.1.25</version>
+        <!-- 如果当前项目中用到了servlet-api则需要将逐一的是jar包冲突，需要忽略。如果为用到，则忽略不忽略都行 -->
+        <exclusions>
+            <exclusion>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>servlet-api</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+
+2、生产者配置文件
+    <!-- 发布服务：把接口service通过dubbo发布Zookeeper注册中心 -->
+    <!-- 提供方应用名称 -->
+    <dubbo:application name="canglang-hessian-service"/>
+
+    <!-- 使用dubbo通过Zookeeper协议注册服务 -->
+    <dubbo:registry protocol="zookeeper" address="192.168.145.129:2181"/>
+
+    <!-- 用dubbo协议暴露服务 ：此端口是提供给消费者的，消费者通过dubbo协议调用zk服务 -->
+    <!-- 多协议配置：端口不能相同；name值：dubbo、hessian、rmi -->
+    <dubbo:protocol name="dubbo" port="20880" />
+    <dubbo:protocol name="hessian" port="20881" />
+
+    <!-- 
+        * 不同服务不同协议 
+        比如:
+            不同服务在性能上适用不同协议进行传输，
+            比如大数据用短连接协议，小数据大并发用长连接协议 
+    -->
+
+    <!-- 接口实现类)-->
+    <bean id="userServiceImpl" class="hessian.project.service.impl.UserServiceImpl"/>
+    <!-- 发布服务(发布的是接口) -->
+    <dubbo:service ref="userServiceImpl" interface="hessian.project.service.IUserService" protocol=“dubbo” version="1.0.0" retries="0" timeout="100000"/>
+
+    <!-- 接口实现类)-->
+    <bean id="userServiceImpl" class="hessian.project.service.impl.UserServiceImpl"/>
+    <!-- 发布服务(发布的是接口) -->
+    <dubbo:service ref="userServiceImpl" interface="hessian.project.service.IUserService" protocol=“hessian” version="1.0.0" retries="0" timeout="100000"/>
+
+
+
+3、消费者配置文件
+    同一服务多协议暴露 比如:需要与http客户端互操作
+
+    <!-- 生成者配置文件中使用多协议配置 -->
+    <dubbo:protocol name="dubbo" port="20880" /> 
+    <dubbo:protocol name="hessian" port="8080" />
+
+    <!-- 消费者引用服务 -->
+	<dubbo:application name="canglang-hessian-service"/>
+
+	<!-- 消费者使用dubbo从Zookeeper注册中心获取服务 -->
+	<dubbo:registry protocol="zookeeper" address="192.168.145.129:2181"/>
+
+    <!-- 消费者使用多个协议暴露服务 -->
+    <dubbo:reference id="helloService" interface="com.alibaba.hello.api.HelloService" version="1.0.0" protocol="dubbo,hessian" />
+
+
+
+4、注释：
+    4.1、不同服务不同协议
+        在生产者的配置文件中
+
+        如果有两个协议：
+            <dubbo:protocol name="dubbo" port="20880" />
+            <dubbo:protocol name="hessian" port="20881" />
+
+        在要发布服务的接口标签dubbo:service上面：
+            情况一：没有使用protocol属性，则发布到moniter上以后会是两个服务：
+                192.168.145.1:20881
+                    服务地址:hessian://192.168.145.1:20881/hessian.project.service.IUserService?anyhost=true&application=canglang-hessian-service&dubbo=2.5.3&interface=hessian.project.service.IUserService&methods=findUserInfo&pid=7768&retries=0&revision=1.0.0&side=provider&timeout=100000×tamp=1505460318184&version=1.0.0
+
+                192.168.145.1:20880
+                    服务地址:dubbo://192.168.145.1:20880/hessian.project.service.IUserService?anyhost=true&application=canglang-hessian-service&dubbo=2.5.3&interface=hessian.project.service.IUserService&methods=findUserInfo&pid=7768&retries=0&revision=1.0.0&side=provider&timeout=100000×tamp=1505460317494&version=1.0.0
+        
+            情况二：使用了protocol属性，则在moniter上面会是指定的服务：
+                192.168.145.1:20881
+                    服务地址:hessian://192.168.145.1:20881/hessian.project.service.IUserService?anyhost=true&application=canglang-hessian-service&dubbo=2.5.3&interface=hessian.project.service.IUserService&methods=findUserInfo&pid=7768&retries=0&revision=1.0.0&side=provider&timeout=100000×tamp=1505460318184&version=1.0.0
+
+            情况三：在dubbo:service标签上使用了protocol标签，并且用了以上的两个协议protocol="dubbo,hessian"，则效果和“情况一”一样
+
+
+    4.2、同一服务多协议
+        在消费者配置文件中
+
+        如果在生产者配置文件中配置了两种不同的协议：
+            <dubbo:protocol name="dubbo" port="20880" />
+            <dubbo:protocol name="hessian" port="20881" />
+
+        在消费者配置文件中的dubbo:reference标签上：
+            使用protocol标签：
+                使用一个协议：protocol="dubbo/hessian"
+                使用两个协议：protocol="dubbo,hessian"
+        
+            不使用protocol标签：
+                则效果和使用两个是一样的
+
+5、dubbo和hessian的区别
+    简单的说：
+        RPC就是从一台机器（客户端）上通过参数传递的方式调用另一台机器（服务器）上的一个函数或方法（可以统称为服务）并得到返回的结果。
+        RPC 会隐藏底层的通讯细节（不需要直接处理Socket通讯或Http通讯）
+        RPC 是一个请求响应模型。客户端发起请求，服务器返回响应（类似于Http的工作方式）
+        RPC 在使用形式上像调用本地函数（或方法）一样去调用远程的函数（或方法）。
+
+    hessian、rmi、dubbo都是rpc的一种实现
+    rpc基于xdr
+    rmi是rpc的面向对象版实现
+    hessian是基于binary-rpc协议
+    dubbo是 基于Hessian二进制序列化
+    webservice也提供了rpc实现，但是效果不太好。
