@@ -19,7 +19,7 @@ public class UserServiceImpl implements IUserService{
     @Resource
     private TbUserMapper userMapper;
 
-    @Override
+
     public TbUser findUserInfo(String username, String password) {
         TbUserExample example = new TbUserExample();
 
@@ -29,7 +29,7 @@ public class UserServiceImpl implements IUserService{
 
         List<TbUser> tbUsers = userMapper.selectByExample(example);
 
-        TbUser user = new TbUser();
+        TbUser user = null;
 
         if (tbUsers != null && tbUsers.size() > 0) {
             user = tbUsers.get(0);

@@ -28,10 +28,10 @@ public class UserController {
     private IUserService userService;
 
     @ResponseBody
-    @RequestMapping("/findUserInfo/{username}/{password}")
-    public String findUserInfo(@PathVariable String username, @PathVariable String password){
+    @RequestMapping("/findUserInfo")
+    public String findUserInfo(TbUser tbUser){
 
-        TbUser user = userService.findUserInfo(username, password);
+        TbUser user = userService.findUserInfo(tbUser.getUsername(), tbUser.getPassword());
 
         String userJson = JsonUtils.objectToJson(user);
 

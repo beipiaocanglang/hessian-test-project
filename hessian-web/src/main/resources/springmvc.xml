@@ -47,7 +47,7 @@
 	<dubbo:registry protocol="zookeeper" address="192.168.145.129:2181"/>
 	
 	<!-- 引用服务(包含根据id查询商品信息、分页查询商品列表) -->
-	<dubbo:reference id="userService" interface="hessian.project.service.IUserService" protocol="dubbo" retries="0" version="1.0.0" timeout="100000"/>
+	<dubbo:reference id="userService" interface="hessian.project.service.IUserService" retries="0" version="1.0.0" timeout="100000"/>
 
 </beans>
 
