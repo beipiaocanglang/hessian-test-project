@@ -57,12 +57,12 @@
 
 	<!-- 用dubbo协议在20880端口暴露服务 ：此端口是提供给消费者的，消费者通过dubbo协议调用zk服务 -->
 	<dubbo:protocol name="dubbo" port="20880" />
-	<dubbo:protocol name="hessian" port="20881" />
+	<!--<dubbo:protocol name="hessian" port="20881" />-->
 
     <!-- 声明需要暴露的服务接口 -->
     <!-- 创建需要发布对象(包含根据id查询商品信息、分页查询商品列表)-->
     <bean id="userServiceImpl" class="hessian.project.service.impl.UserServiceImpl"/>
    	<!-- 发布服务 -->
-    <dubbo:service ref="userServiceImpl" interface="hessian.project.service.IUserService" protocol="hessian" version="1.0.0" retries="0" timeout="100000"/>
+    <dubbo:service ref="userServiceImpl" interface="hessian.project.service.IUserService" version="1.0.0" retries="0" timeout="100000"/>
 
 </beans>
