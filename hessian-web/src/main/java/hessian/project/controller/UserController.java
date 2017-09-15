@@ -24,7 +24,6 @@ public class UserController {
         return page;
     }
 
-
     @Resource
     private IUserService userService;
 
